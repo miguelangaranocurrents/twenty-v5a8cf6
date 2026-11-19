@@ -79,23 +79,31 @@ export const TextInput = ({
   const copyRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInternalText(getValue(event.target.value, shouldTrim));
-    onChange?.(getValue(event.target.value, shouldTrim));
+    setInternalText(event.target.value);
+    onChange?.(event.target.value);
   };
   useEffect(() => {
-    setInternalText(getValue(value, shouldTrim));
-  }, [value, shouldTrim]);
+    setInternalText(value);
+  }, [value]);
+
+  const withTrim =
+    (callback: ((newText: string) => void) | undefined) =>
+    (newText: string) =>
+      callback?.(getValue(newText, shouldTrim));
 
   useRegisterInputEvents({
     focusId: instanceId,
     inputRef: wrapperRef,
     copyRef: copyRef,
     inputValue: internalText,
-    onEnter,
-    onEscape,
-    onClickOutside,
-    onTab,
-    onShiftTab,
+    onEnter: onEnter && withTrim(onEnter),
+    onEscape: onEscape && withTrim(onEscape),
+    onClickOutside:
+      onClickOutside &&
+      ((event, inputValue) =>
+        onClickOutside(event, getValue(inputValue, shouldTrim))),
+    onTab: onTab && withTrim(onTab),
+    onShiftTab: onShiftTab && withTrim(onShiftTab),
   });
 
   return (
